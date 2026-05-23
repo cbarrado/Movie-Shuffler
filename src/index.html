@@ -7,18 +7,25 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="lang-switcher" id="lang-switcher">
+      <button data-lang="es">ES</button>
+      <button data-lang="en">EN</button>
+    </div>
+
     <main>
       <header>
         <h1>🎲 Movie Shuffler</h1>
-        <p class="subtitle">¿Qué peli toca hoy?</p>
+        <p class="subtitle" data-i18n="subtitle">¿Qué peli toca hoy?</p>
       </header>
 
       <section class="card">
         <div class="card-header">
-          <h2>Plataformas</h2>
+          <h2 data-i18n="platforms_title">Plataformas</h2>
           <div class="card-actions">
-            <button class="link" data-toggle="platforms" data-mode="all">Todas</button>
-            <button class="link" data-toggle="platforms" data-mode="none">Ninguna</button>
+            <button class="link" data-toggle="platforms" data-mode="all"
+              data-i18n="select_all_f">Todas</button>
+            <button class="link" data-toggle="platforms" data-mode="none"
+              data-i18n="select_none_f">Ninguna</button>
           </div>
         </div>
         <div class="grid" id="platforms-grid"></div>
@@ -26,21 +33,20 @@
 
       <section class="card">
         <div class="card-header">
-          <h2>Géneros</h2>
+          <h2 data-i18n="genres_title">Géneros</h2>
           <div class="card-actions">
-            <button class="link" data-toggle="genres" data-mode="all">Todos</button>
-            <button class="link" data-toggle="genres" data-mode="none">Ninguno</button>
+            <button class="link" data-toggle="genres" data-mode="all"
+              data-i18n="select_all_m">Todos</button>
+            <button class="link" data-toggle="genres" data-mode="none"
+              data-i18n="select_none_m">Ninguno</button>
           </div>
         </div>
         <div class="grid" id="genres-grid"></div>
       </section>
 
       <section class="card">
-        <h2>Rango de posición</h2>
-        <p class="range-label">
-          Del <span class="value-inline">1</span> al
-          <span class="value-inline" id="max-value">10</span>
-        </p>
+        <h2 data-i18n="range_title">Rango de posición</h2>
+        <p class="range-label" id="range-label"></p>
         <input
           type="range"
           id="max-position"
@@ -54,32 +60,28 @@
         </div>
       </section>
 
-      <button id="roll-button" class="primary" disabled>
+      <button id="roll-button" class="primary" disabled data-i18n="roll_button">
         🎲 Tirar dados
       </button>
 
       <section class="result hidden" id="result">
-        <h3>Tirada <span id="roll-count">#1</span> de hoy</h3>
+        <h3 id="roll-header"></h3>
         <div class="result-grid">
           <div>
-            <span class="label">Plataforma</span>
+            <span class="label" data-i18n="result_platform">Plataforma</span>
             <span class="value" id="result-platform">—</span>
           </div>
           <div>
-            <span class="label">Género</span>
+            <span class="label" data-i18n="result_genre">Género</span>
             <span class="value" id="result-genre">—</span>
           </div>
           <div>
-            <span class="label">Posición</span>
+            <span class="label" data-i18n="result_position">Posición</span>
             <span class="value" id="result-position">—</span>
           </div>
         </div>
-        <p class="hint">
-          Abre <strong id="hint-platform">la plataforma</strong>, filtra por
-          <strong id="hint-genre">género</strong> y cuenta hasta la peli
-          <strong id="hint-position">N</strong>.
-        </p>
-        <button id="reroll-button" class="secondary">↻ Volver a tirar</button>
+        <p class="hint" id="hint"></p>
+        <button id="reroll-button" class="secondary" data-i18n="reroll">↻ Volver a tirar</button>
       </section>
 
       <p id="error" class="error hidden"></p>

@@ -1,14 +1,75 @@
 const { invoke } = window.__TAURI__.core;
 
+const i18n = {
+  es: {
+    subtitle: "¿Qué peli toca hoy?",
+    platforms_title: "Plataformas",
+    genres_title: "Géneros",
+    select_all_f: "Todas",
+    select_none_f: "Ninguna",
+    select_all_m: "Todos",
+    select_none_m: "Ninguno",
+    range_title: "Rango de posición",
+    range_label: "Del <b>1</b> al <b>{max}</b>",
+    roll_button: "🎲 Tirar dados",
+    roll_header: "Tirada <b>#{n}</b> de hoy",
+    result_platform: "Plataforma",
+    result_genre: "Género",
+    result_position: "Posición",
+    position_of: "#{n} de {max}",
+    hint: "Abre <strong>{platform}</strong>, filtra por <strong>{genre}</strong> y cuenta hasta la peli <strong>nº {position}</strong>.",
+    reroll: "↻ Volver a tirar",
+    error_load: "No se pudo cargar el catálogo: ",
+  },
+  en: {
+    subtitle: "What movie tonight?",
+    platforms_title: "Platforms",
+    genres_title: "Genres",
+    select_all_f: "All",
+    select_none_f: "None",
+    select_all_m: "All",
+    select_none_m: "None",
+    range_title: "Position range",
+    range_label: "From <b>1</b> to <b>{max}</b>",
+    roll_button: "🎲 Roll the dice",
+    roll_header: "Roll <b>#{n}</b> today",
+    result_platform: "Platform",
+    result_genre: "Genre",
+    result_position: "Position",
+    position_of: "#{n} of {max}",
+    hint: "Open <strong>{platform}</strong>, filter by <strong>{genre}</strong> and count to movie <strong>#{position}</strong>.",
+    reroll: "↻ Re-roll",
+    error_load: "Could not load catalog: ",
+  },
+};
+
 const state = {
   catalog: { platforms: [], genres: [] },
   selectedPlatforms: new Set(),
   selectedGenres: new Set(),
   maxPosition: 10,
   rollCount: 0,
+  lang: "es",
+  lastResult: null,
 };
 
 const $ = (id) => document.getElementById(id);
+
+const t = (key, vars = {}) => {
+  let s = (i18n[state.lang] && i18n[state.lang][key]) || i18n.es[key] || key;
+  for (const [k, v] of Object.entries(vars)) {
+    s = s.replaceAll(`{${k}}`, String(v));
+  }
+  return s;
+};
+
+const fmt = (template, vars) => {
+  let s = template;
+  for (const [k, v] of Object.entries(vars)) {
+    s = s.replaceAll(`{${k}}`, String(v));
+  }
+  return s;
+};
 
 function todayIsoDate() {
   const d = new Date();
@@ -18,6 +79,11 @@ function todayIsoDate() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function itemName(item) {
+  if (state.lang === "en" && item.name_en) return item.name_en;
+  return item.name;
+}
+
 async function persist() {
   try {
     await invoke("save_selections", {
@@ -25,6 +91,7 @@ async function persist() {
         platforms: [...state.selectedPlatforms],
         genres: [...state.selectedGenres],
         max_position: state.maxPosition,
+        lang: state.lang,
       },
     });
   } catch (e) {
@@ -57,7 +124,7 @@ function renderCheckboxes(containerId, items, selectedSet) {
     });
 
     const span = document.createElement("span");
-    span.textContent = item.name;
+    span.textContent = itemName(item);
 
     label.appendChild(input);
     label.appendChild(span);
@@ -77,15 +144,26 @@ function showError(msg) {
   setTimeout(() => el.classList.add("hidden"), 4000);
 }
 
-function paintResult(result) {
+function paintRangeLabel() {
+  $("range-label").innerHTML = t("range_label", { max: state.maxPosition });
+}
+
+function paintResult() {
+  if (!state.lastResult) return;
+  const r = state.lastResult;
   $("result").classList.remove("hidden");
-  $("roll-count").textContent = `#${state.rollCount}`;
-  $("result-platform").textContent = result.platform.name;
-  $("result-genre").textContent = result.genre.name;
-  $("result-position").textContent = `#${result.position} de ${state.maxPosition}`;
-  $("hint-platform").textContent = result.platform.name;
-  $("hint-genre").textContent = result.genre.name;
-  $("hint-position").textContent = `nº ${result.position}`;
+  $("roll-header").innerHTML = t("roll_header", { n: state.rollCount });
+  $("result-platform").textContent = itemName(r.platform);
+  $("result-genre").textContent = itemName(r.genre);
+  $("result-position").textContent = t("position_of", {
+    n: r.position,
+    max: state.maxPosition,
+  });
+  $("hint").innerHTML = t("hint", {
+    platform: itemName(r.platform),
+    genre: itemName(r.genre),
+    position: r.position,
+  });
 }
 
 async function doRoll() {
@@ -97,10 +175,27 @@ async function doRoll() {
       maxPosition: state.maxPosition,
       date: todayIsoDate(),
     });
-    paintResult(result);
+    state.lastResult = result;
+    paintResult();
   } catch (e) {
     showError(String(e));
   }
+}
+
+function applyI18n() {
+  document.documentElement.lang = state.lang;
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  paintRangeLabel();
+  paintResult();
+
+  document.querySelectorAll(".lang-switcher button").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.lang === state.lang);
+  });
+
+  renderCheckboxes("platforms-grid", state.catalog.platforms, state.selectedPlatforms);
+  renderCheckboxes("genres-grid", state.catalog.genres, state.selectedGenres);
 }
 
 function setupToggles() {
@@ -128,6 +223,18 @@ function setupToggles() {
   });
 }
 
+function setupLangSwitcher() {
+  document.querySelectorAll(".lang-switcher button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const next = btn.dataset.lang;
+      if (next === state.lang) return;
+      state.lang = next;
+      applyI18n();
+      persist();
+    });
+  });
+}
+
 async function init() {
   try {
     state.catalog = await invoke("get_catalog");
@@ -135,24 +242,23 @@ async function init() {
     state.selectedPlatforms = new Set(sel.platforms || []);
     state.selectedGenres = new Set(sel.genres || []);
     state.maxPosition = Number.isFinite(sel.max_position) ? sel.max_position : 10;
+    state.lang = sel.lang === "en" ? "en" : "es";
   } catch (e) {
-    showError("No se pudo cargar el catálogo: " + e);
+    showError("Catalog load failed: " + e);
     return;
   }
 
   const slider = $("max-position");
   slider.value = state.maxPosition;
-  $("max-value").textContent = state.maxPosition;
   slider.addEventListener("input", (e) => {
     state.maxPosition = parseInt(e.target.value, 10);
-    $("max-value").textContent = state.maxPosition;
+    paintRangeLabel();
+    paintResult();
     persist();
   });
 
-  renderCheckboxes("platforms-grid", state.catalog.platforms, state.selectedPlatforms);
-  renderCheckboxes("genres-grid", state.catalog.genres, state.selectedGenres);
-
   setupToggles();
+  setupLangSwitcher();
 
   $("roll-button").addEventListener("click", () => {
     state.rollCount = 1;
@@ -164,6 +270,7 @@ async function init() {
     doRoll();
   });
 
+  applyI18n();
   updateButtonState();
 }
 

@@ -11,6 +11,8 @@ const CATALOG_JSON: &str = include_str!("../resources/data.json");
 struct Item {
     id: String,
     name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    name_en: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -27,10 +29,16 @@ struct Selections {
     genres: Vec<String>,
     #[serde(default = "default_max_position")]
     max_position: u32,
+    #[serde(default = "default_lang")]
+    lang: String,
 }
 
 fn default_max_position() -> u32 {
     10
+}
+
+fn default_lang() -> String {
+    "es".into()
 }
 
 impl Default for Selections {
@@ -39,6 +47,7 @@ impl Default for Selections {
             platforms: vec![],
             genres: vec![],
             max_position: default_max_position(),
+            lang: default_lang(),
         }
     }
 }
