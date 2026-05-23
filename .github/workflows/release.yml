@@ -96,18 +96,59 @@ jobs:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
         run: npm run tauri android init
 
-      - name: Build Android APK
+      - name: Build Android APK (release, unsigned)
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
         run: npm run tauri android build -- --apk
 
-      - name: Upload APK to release
+      - name: Sign APK
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -e
+          UNSIGNED=$(find src-tauri/gen/android -name "*unsigned*.apk" | head -1)
+          if [ -z "$UNSIGNED" ]; then
+            UNSIGNED=$(find src-tauri/gen/android -type f -name "*.apk" | head -1)
+          fi
+          OUT_DIR=$(dirname "$UNSIGNED")
+          SIGNED="$OUT_DIR/movie-shuffler-universal.apk"
+
+          if [ -n "$ANDROID_KEYSTORE_B64" ]; then
+            echo "Signing with release keystore (your key)"
+            echo "$ANDROID_KEYSTORE_B64" | base64 -d > "$HOME/release.jks"
+            KEYSTORE="$HOME/release.jks"
+            KEYSTORE_PASS="$ANDROID_KEYSTORE_PASSWORD"
+            KEY_ALIAS="$ANDROID_KEY_ALIAS"
+            KEY_PASS="$ANDROID_KEY_PASSWORD"
+          else
+            echo "No release keystore secret found. Generating a debug keystore on the fly (installable but not for distribution)."
+            KEYSTORE="$HOME/debug.keystore"
+            KEYSTORE_PASS=android
+            KEY_ALIAS=androiddebugkey
+            KEY_PASS=android
+            keytool -genkey -v -noprompt \
+              -keystore "$KEYSTORE" -storepass "$KEYSTORE_PASS" \
+              -alias "$KEY_ALIAS" -keypass "$KEY_PASS" \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Movie Shuffler Debug, O=Movie Shuffler, C=ES"
+          fi
+
+          BUILD_TOOLS=$(ls -d ${ANDROID_HOME}/build-tools/*/ | sort -V | tail -1)
+          "${BUILD_TOOLS}zipalign" -f -p 4 "$UNSIGNED" "$OUT_DIR/aligned.apk"
+          "${BUILD_TOOLS}apksigner" sign \
+            --ks "$KEYSTORE" --ks-pass "pass:$KEYSTORE_PASS" \
+            --ks-key-alias "$KEY_ALIAS" --key-pass "pass:$KEY_PASS" \
+            --out "$SIGNED" "$OUT_DIR/aligned.apk"
+          rm "$OUT_DIR/aligned.apk"
+          "${BUILD_TOOLS}apksigner" verify "$SIGNED"
+          echo "SIGNED_APK=$SIGNED" >> $GITHUB_ENV
+
+      - name: Upload signed APK to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          APK=$(find src-tauri/gen/android -type f -name "*.apk" | grep -i universal | head -1)
-          if [ -z "$APK" ]; then
-            APK=$(find src-tauri/gen/android -type f -name "*.apk" | head -1)
-          fi
-          echo "Uploading $APK"
-          gh release upload ${{ github.ref_name }} "$APK" --clobber --repo ${{ github.repository }}
+          echo "Uploading $SIGNED_APK"
+          gh release upload ${{ github.ref_name }} "$SIGNED_APK" --clobber --repo ${{ github.repository }}
