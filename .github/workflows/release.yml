@@ -116,7 +116,7 @@ jobs:
           OUT_DIR=$(dirname "$UNSIGNED")
           SIGNED="$OUT_DIR/movie-shuffler-universal.apk"
 
-          if [ -n "$ANDROID_KEYSTORE_B64" ]; then
+          if [ -n "$ANDROID_KEYSTORE_B64" ] && [ -n "$ANDROID_KEYSTORE_PASSWORD" ] && [ -n "$ANDROID_KEY_ALIAS" ] && [ -n "$ANDROID_KEY_PASSWORD" ]; then
             echo "Signing with release keystore (your key)"
             echo "$ANDROID_KEYSTORE_B64" | base64 -d > "$HOME/release.jks"
             KEYSTORE="$HOME/release.jks"
