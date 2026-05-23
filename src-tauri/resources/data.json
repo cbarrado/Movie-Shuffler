@@ -1,0 +1,37 @@
+{
+  "platforms": [
+    { "id": "netflix",       "name": "Netflix" },
+    { "id": "prime_video",   "name": "Prime Video" },
+    { "id": "disney_plus",   "name": "Disney+" },
+    { "id": "hbo_max",       "name": "HBO Max" },
+    { "id": "apple_tv",      "name": "Apple TV+" },
+    { "id": "sky_showtime",  "name": "SkyShowtime" },
+    { "id": "rakuten_tv",    "name": "Rakuten TV" },
+    { "id": "movistar_plus", "name": "Movistar Plus+" },
+    { "id": "filmin",        "name": "Filmin" },
+    { "id": "atresplayer",   "name": "Atresplayer Premium" },
+    { "id": "rtve_play",     "name": "RTVE Play" },
+    { "id": "mitele_plus",   "name": "mitele PLUS" },
+    { "id": "flixole",       "name": "FlixOlé" }
+  ],
+  "genres": [
+    { "id": "accion",          "name": "Acción" },
+    { "id": "animacion",       "name": "Animación" },
+    { "id": "aventura",        "name": "Aventura" },
+    { "id": "belico",          "name": "Bélico" },
+    { "id": "ciencia_ficcion", "name": "Ciencia ficción" },
+    { "id": "comedia",         "name": "Comedia" },
+    { "id": "crimen",          "name": "Crimen" },
+    { "id": "documental",      "name": "Documental" },
+    { "id": "drama",           "name": "Drama" },
+    { "id": "familiar",        "name": "Familiar" },
+    { "id": "fantasia",        "name": "Fantasía" },
+    { "id": "historico",       "name": "Histórico" },
+    { "id": "misterio",        "name": "Misterio" },
+    { "id": "musical",         "name": "Musical" },
+    { "id": "romance",         "name": "Romance" },
+    { "id": "suspense",        "name": "Suspense" },
+    { "id": "terror",          "name": "Terror" },
+    { "id": "western",         "name": "Western" }
+  ]
+}

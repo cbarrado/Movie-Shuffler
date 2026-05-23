@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Shuffler</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>🎲 Movie Shuffler</h1>
+        <p class="subtitle">¿Qué peli toca hoy?</p>
+      </header>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>Plataformas</h2>
+          <div class="card-actions">
+            <button class="link" data-toggle="platforms" data-mode="all">Todas</button>
+            <button class="link" data-toggle="platforms" data-mode="none">Ninguna</button>
+          </div>
+        </div>
+        <div class="grid" id="platforms-grid"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>Géneros</h2>
+          <div class="card-actions">
+            <button class="link" data-toggle="genres" data-mode="all">Todos</button>
+            <button class="link" data-toggle="genres" data-mode="none">Ninguno</button>
+          </div>
+        </div>
+        <div class="grid" id="genres-grid"></div>
+      </section>
+
+      <section class="card">
+        <h2>Rango de posición</h2>
+        <p class="range-label">
+          Del <span class="value-inline">1</span> al
+          <span class="value-inline" id="max-value">10</span>
+        </p>
+        <input
+          type="range"
+          id="max-position"
+          min="1"
+          max="20"
+          value="10"
+        />
+        <div class="range-scale">
+          <span>1</span>
+          <span>20</span>
+        </div>
+      </section>
+
+      <button id="roll-button" class="primary" disabled>
+        🎲 Tirar dados
+      </button>
+
+      <section class="result hidden" id="result">
+        <h3>Tirada <span id="roll-count">#1</span> de hoy</h3>
+        <div class="result-grid">
+          <div>
+            <span class="label">Plataforma</span>
+            <span class="value" id="result-platform">—</span>
+          </div>
+          <div>
+            <span class="label">Género</span>
+            <span class="value" id="result-genre">—</span>
+          </div>
+          <div>
+            <span class="label">Posición</span>
+            <span class="value" id="result-position">—</span>
+          </div>
+        </div>
+        <p class="hint">
+          Abre <strong id="hint-platform">la plataforma</strong>, filtra por
+          <strong id="hint-genre">género</strong> y cuenta hasta la peli
+          <strong id="hint-position">N</strong>.
+        </p>
+        <button id="reroll-button" class="secondary">↻ Volver a tirar</button>
+      </section>
+
+      <p id="error" class="error hidden"></p>
+    </main>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
